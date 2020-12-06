@@ -1,24 +1,25 @@
 {
   "extends": "tslint:recommended",
   "rules": {
+
+    "variable-name": false,
     "array-type": false,
     "arrow-parens": false,
     "deprecation": {
       "severity": "warning"
     },
-    "component-class-suffix": true,
+
+    "component-class-suffix": false,
     "contextual-lifecycle": true,
-    "directive-class-suffix": true,
+    "directive-class-suffix": false,
     "directive-selector": [
       true,
       "attribute",
-      "app",
       "camelCase"
     ],
     "component-selector": [
       true,
       "element",
-      "app",
       "kebab-case"
     ],
     "import-blacklist": [
@@ -54,7 +55,7 @@
     ],
     "no-empty": false,
     "no-inferrable-types": [
-      true,
+      false,
       "ignore-params"
     ],
     "no-non-null-assertion": true,
@@ -62,7 +63,7 @@
     "no-switch-case-fall-through": true,
     "no-var-requires": false,
     "object-literal-key-quotes": [
-      true,
+      false,
       "as-needed"
     ],
     "object-literal-sort-keys": false,
@@ -73,8 +74,8 @@
     ],
     "trailing-comma": false,
     "no-conflicting-lifecycle": true,
-    "no-host-metadata-property": true,
-    "no-input-rename": true,
+    "no-host-metadata-property": false,
+    "no-input-rename": false,
     "no-inputs-metadata-property": true,
     "no-output-native": true,
     "no-output-on-prefix": true,

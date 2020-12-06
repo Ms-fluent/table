@@ -1,0 +1,79 @@
+@import '~office-ui-fabric-core/src/sass/variables/Font.Variables';
+@import '~office-ui-fabric-core/src/sass/variables/Animation.Variables';
+@import '~office-ui-fabric-core/src/sass/variables/Color.Variables';
+
+$ms-table-bgColor: $ms-color-white;
+$ms-table-border-color: $ms-color-gray30;
+$ms-table-cell-hover-backgroundColor: $ms-color-infoBackground;
+$ms-tableRow-animationDuration: $ms-motion-duration-3;
+
+.ms-table {
+  display: block;
+  overflow: auto;
+}
+
+.ms-table-layout {
+  display: table;
+  //table-layout: fixed;
+  width: 100%;
+  position: relative;
+  background-color: inherit;
+  border-collapse: collapse;
+  font-family: $ms-font-family-west-european;
+}
+
+.ms-tableRow-hidden {
+  //transform: scaleY(0);
+}
+
+
+.ms-tableRow, .ms-tableHead {
+  display: table-row;
+
+  //transition: transform $ms-tableRow-animationDuration;
+  //transform-origin: top;
+  overflow: hidden;
+  background-color: #FFF;
+
+  &.ms-selected {
+    background: $ms-color-gray20;
+    user-select: none;
+  }
+
+}
+
+
+
+.ms-tableRow:hover {
+  background-color: $ms-table-cell-hover-backgroundColor;
+  display: table-row;
+}
+.ms-tableCheckbox { }
+
+.ms-tableCell, .ms-tableHeadCell, .ms-tableRow td {
+  cursor: default;
+
+  display: table-cell;
+  text-align: left;
+  padding: 5px 10px;
+  vertical-align: middle;
+  font-size: 14px;
+
+  background-color: $ms-table-bgColor;
+}
+
+.ms-tableCell {
+  border-top: 1px solid $ms-table-border-color;
+}
+
+.ms-tableHeadCell {
+  cursor: pointer;
+  font-weight: $ms-font-weight-semibold;
+  padding: 10px 10px;
+  position: sticky;
+  top: 0;
+
+  &:hover {
+    background-color: $ms-table-cell-hover-backgroundColor;
+  }
+}
