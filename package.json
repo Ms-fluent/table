@@ -1,15 +1,42 @@
 {
-  "name": "ng-fluent",
-  "version": "0.0.0",
+  "name": "@ms-fluent/table",
+  "version": "0.0.1",
   "scripts": {
     "ng": "ng",
+    "package": "ng-packagr -p package.json",
+    "publish": "npm publish dist --access public",
     "start": "ng serve",
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
   },
-  "private": true,
+  "private": false,
+  "ngPackage": {
+    "assets": [
+      "src/styles"
+    ],
+    "lib": {
+      "entryFile": "src/components/table/index.ts"
+    },
+    "dest": "dist",
+    "whitelistedNonPeerDependencies": [
+      "@angular/animations",
+      "@angular/common",
+      "@angular/compiler",
+      "@angular/core",
+      "@angular/cdk",
+      "@angular/forms",
+      "@angular/platform-browser",
+      "@angular/platform-browser-dynamic",
+      "@angular/router",
+      "rxjs",
+      "tslib",
+      "zone.js",
+      "node-sass",
+      "office-ui-fabric-core"
+    ]
+  },
   "dependencies": {
     "@angular/animations": "~9.0.1",
     "@angular/cdk": "^10.1.3",
@@ -44,7 +71,7 @@
     "karma-coverage-istanbul-reporter": "~2.1.0",
     "karma-jasmine": "~2.0.1",
     "karma-jasmine-html-reporter": "^1.4.2",
-    "ng-packagr": "^10.0.4",
+    "ng-packagr": "9.0.0",
     "node-sass": "^4.14.1",
     "protractor": "~5.4.3",
     "ts-node": "~8.3.0",

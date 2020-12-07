@@ -33,6 +33,7 @@ export class MsTableHead<T> {
     }
 
     cells[index].host.style.display = 'none';
+    cells[index].visible = false;
   }
 
   showCell(index: number) {
@@ -42,5 +43,14 @@ export class MsTableHead<T> {
     }
 
     cells[index].host.style.display = 'table-cell';
+    cells[index].visible = true;
+  }
+
+  findColumnIndex(name: string): number {
+    const cell = this.headerCells.find(c => c.name === name);
+    if (cell == null) {
+      return -1;
+    }
+    return this.headerCells.toArray().indexOf(cell);
   }
 }

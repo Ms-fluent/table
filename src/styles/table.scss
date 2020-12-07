@@ -1,6 +1,6 @@
-@import '~office-ui-fabric-core/src/sass/variables/Font.Variables';
-@import '~office-ui-fabric-core/src/sass/variables/Animation.Variables';
-@import '~office-ui-fabric-core/src/sass/variables/Color.Variables';
+@import '../../node_modules/office-ui-fabric-core/src/sass/variables/Font.Variables';
+@import '../../node_modules/office-ui-fabric-core/src/sass/variables/Animation.Variables';
+@import '../../node_modules/office-ui-fabric-core/src/sass/variables/Color.Variables';
 
 $ms-table-bgColor: $ms-color-white;
 $ms-table-border-color: $ms-color-gray30;
@@ -47,6 +47,7 @@ $ms-tableRow-animationDuration: $ms-motion-duration-3;
 .ms-tableRow:hover {
   background-color: $ms-table-cell-hover-backgroundColor;
   display: table-row;
+  box-sizing: border-box;
 }
 .ms-tableCheckbox { }
 
@@ -60,6 +61,7 @@ $ms-tableRow-animationDuration: $ms-motion-duration-3;
   font-size: 14px;
 
   background-color: $ms-table-bgColor;
+  box-sizing: border-box;
 }
 
 .ms-tableCell {
@@ -73,7 +75,58 @@ $ms-tableRow-animationDuration: $ms-motion-duration-3;
   position: sticky;
   top: 0;
 
+  & .ms-tableHeadCell-label {
+
+  }
+  & .ms-tableHeadCell-layout {
+    display: flex;
+    align-items: center;
+  }
+
+  & .ms-tableHeadCell-sortIcon {
+    width: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   &:hover {
     background-color: $ms-table-cell-hover-backgroundColor;
   }
+
+  & .ms-Icon--SortUp {
+    animation: msTableSortUp .3s;
+  }
+  & .ms-Icon--SortDown {
+    animation: msTableSortDown .3s;
+  }
+
+
 }
+
+
+
+@keyframes msTableSortUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes msTableSortDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

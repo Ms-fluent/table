@@ -10,4 +10,6 @@ export interface MsTableContract<T> {
   reverse();
 
   remove(item: T);
+
+  resetSortColumn();
 }

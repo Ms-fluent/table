@@ -1,5 +1,6 @@
-import {Component} from '@angular/core';
-import {ELEMENT_DATA} from '../element';
+import {Component, ViewChild} from '@angular/core';
+import {ELEMENT_DATA, PeriodicElement} from '../element';
+import {MsTable} from '../components/table';
 
 @Component({
   selector: 'app-root',
@@ -7,7 +8,5 @@ import {ELEMENT_DATA} from '../element';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'ng-fluent';
 
-  elements = ELEMENT_DATA;
 }

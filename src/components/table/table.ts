@@ -6,10 +6,10 @@ import {
   ChangeDetectorRef,
   Component,
   ComponentFactoryResolver,
-  ComponentRef,
   ContentChild,
   ContentChildren,
   ElementRef,
+  EmbeddedViewRef,
   EventEmitter,
   forwardRef,
   Injector,
@@ -24,10 +24,11 @@ import {
   ViewContainerRef,
   ViewEncapsulation
 } from '@angular/core';
-import {MsTableRow, MsTableRowContent, MsTableRowContext, MsTableRowDef} from './table-row';
+import {MsTableRow} from './table-row';
 import {MsTableHead, MsTableHeadDef} from './table-head';
-import {MsTableCellDef} from './table-cell';
 import {MS_TABLE_TOKEN} from './table.interface';
+import {MsTableRowContext, MsTableRowDef} from './table-row-def';
+import {first} from 'rxjs/operators';
 
 let _uniqueId = 0;
 
@@ -35,7 +36,6 @@ let _uniqueId = 0;
   selector: 'ms-table, MsTable',
   exportAs: 'msTable',
   templateUrl: 'table.html',
-  styleUrls: ['table.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   providers: [{provide: MS_TABLE_TOKEN, useExisting: MsTable}],
@@ -91,7 +91,10 @@ export class MsTable<T = any> implements AfterViewInit, OnInit, AfterContentInit
   }
 
   set hiddenColumns(names: string[]) {
-    this.hideColumns(names);
+    if (this.tableRows) {
+      this.hideColumns(names);
+    }
+    this._hiddenColumns = names;
   }
 
   _hiddenColumns: string[] = [];
@@ -115,21 +118,17 @@ export class MsTable<T = any> implements AfterViewInit, OnInit, AfterContentInit
   tableHeadDef: MsTableHeadDef;
 
   @ContentChildren(forwardRef(() => MsTableHead), {descendants: true})
-  tableHeadRows: QueryList<MsTableHead>;
+  tableHeadRows: QueryList<MsTableHead<T>>;
 
-  get tableHeadRow(): MsTableHead {
+  @ContentChildren(forwardRef(() => MsTableRow), {descendants: true})
+  tableRows: QueryList<MsTableRow>;
+
+  get tableHeadRow(): MsTableHead<T> {
     return this.tableHeadRows.length === 0 ? null : this.tableHeadRows.toArray()[0];
   }
 
   @ContentChild(forwardRef(() => MsTableRowDef))
   tableRowDef: MsTableRowDef<T>;
-
-  @ContentChildren(forwardRef(() => MsTableCellDef), {descendants: true})
-  cellDefs: QueryList<MsTableCellDef>;
-
-  @ContentChildren(forwardRef(() => MsTableRowContent), {descendants: true})
-  rowContents: QueryList<MsTableRowContent>;
-
 
   @ViewChild('tableHead', {read: ViewContainerRef})
   tableHeadContainer: ViewContainerRef;
@@ -137,10 +136,15 @@ export class MsTable<T = any> implements AfterViewInit, OnInit, AfterContentInit
   @ViewChild('tableBody', {read: ViewContainerRef})
   tableBodyContainer: ViewContainerRef;
 
-  private _data: Array<T> = [];
+
   private _items: Array<T> = [];
-  private _itemViews: Map<any, ComponentRef<MsTableRow<T>>> = new Map<any, ComponentRef<MsTableRow<T>>>();
+  get items(): T[] {
+    return this._items.slice();
+  }
+
+  private _itemViews: Map<any, EmbeddedViewRef<MsTableRowContext<T>>> = new Map();
   private differ: IterableDiffer<any>;
+
 
   constructor(private componentFactoryResolver: ComponentFactoryResolver,
               private injector: Injector,
@@ -168,12 +172,14 @@ export class MsTable<T = any> implements AfterViewInit, OnInit, AfterContentInit
     const headViewRef = this.tableHeadContainer.createEmbeddedView(this.tableHeadDef.template);
     headViewRef.detectChanges();
 
-    this._data = this.tableRowDef.data.slice();
-    this._items = this._data.slice();
+    this._items = this.tableRowDef.data.slice();
     this.differ = this._differs.find(this._items).create();
     this.applyChanges();
-    this.init.emit();
 
+    this.tableRows.changes.pipe(first()).subscribe(() => {
+      this.hideColumns(this.hiddenColumns);
+    });
+    this.init.emit();
   }
 
   async applyChanges() {
@@ -184,11 +190,12 @@ export class MsTable<T = any> implements AfterViewInit, OnInit, AfterContentInit
     changes.forEachAddedItem(this.forEachAddedItem);
     changes.forEachRemovedItem(this.forEachRemovedItem);
     changes.forEachMovedItem(this.forEachMovedItem);
-    let index = 0;
-    for (const ref of this._itemViews.values()) {
-      ref.instance.context.setData(index++, this._itemViews.size);
-      this.animateItem(ref.instance);
-    }
+
+    changes.forEachItem(record => {
+     const ref = this._itemViews.get(record.trackById);
+     ref.context.setData(record.currentIndex, this._itemViews.size);
+     this.animateItem(ref);
+    });
   }
 
   forEachAddedItem = (record: IterableChangeRecord<any>) => {
@@ -199,7 +206,7 @@ export class MsTable<T = any> implements AfterViewInit, OnInit, AfterContentInit
   forEachRemovedItem = (record: IterableChangeRecord<any>) => {
     const ref = this._itemViews.get(record.trackById);
     if (ref != null) {
-      this.tableBodyContainer.remove(this.tableBodyContainer.indexOf(ref.hostView));
+      this.tableBodyContainer.remove(this.tableBodyContainer.indexOf(ref));
       this._itemViews.delete(record.trackById);
     }
   };
@@ -207,81 +214,100 @@ export class MsTable<T = any> implements AfterViewInit, OnInit, AfterContentInit
   forEachMovedItem = (record: IterableChangeRecord<any>) => {
     const ref = this._itemViews.get(record.trackById);
     if (ref != null) {
-      this.tableBodyContainer.move(ref.hostView, record.currentIndex);
+      this.tableBodyContainer.move(ref, record.currentIndex);
+      ref.context.index = record.currentIndex;
     }
   };
 
-  _createRowView(i: number): ComponentRef<MsTableRow<T>> {
+  _createRowView(i: number): EmbeddedViewRef<MsTableRowContext<T>> {
     const context = new MsTableRowContext(this._items[i], i, this._items.length);
-    const injector: Injector = this._createRowInjector(context);
-    const componentFactory = this.componentFactoryResolver.resolveComponentFactory<MsTableRow<T>>(MsTableRow);
-    const result = this.tableBodyContainer.createComponent<MsTableRow<T>>(componentFactory, i, injector);
-    result.hostView.detectChanges();
-    return result;
+    const viewRef = this.tableBodyContainer.createEmbeddedView(this.tableRowDef.template, context, i);
+    viewRef.detectChanges();
+
+    setTimeout(() => {
+      viewRef.context.coord = viewRef.rootNodes[0].getBoundingClientRect();
+    }, 100);
+
+
+    return viewRef;
   }
 
-  _createRowInjector(context: MsTableRowContext<T>): Injector {
-    return {
-      get: (token: any, notFoundValue?: any): any => {
-        const customTokens = new WeakMap<any, any>([
-          [MsTableRowContext, context],
-          [MsTableRowDef, this.tableRowDef]]);
-
-        const value = customTokens.get(token);
-
-        if (typeof value !== 'undefined') {
-          return value;
-        }
-
-        return this.injector.get<any>(token, notFoundValue);
-      }
-    };
-  }
+  // _createRowView(i: number): ComponentRef<MsTableRow<T>> {
+  //   const context = new MsTableRowContext(this._items[i], i, this._items.length);
+  //   const injector: Injector = this._createRowInjector(context);
+  //   const componentFactory = this.componentFactoryResolver.resolveComponentFactory<MsTableRow<T>>(MsTableRow);
+  //   const result = this.tableBodyContainer.createComponent<MsTableRow<T>>(componentFactory, i, injector);
+  //   result.hostView.detectChanges();
+  //   return result;
+  // }
+  //
+  // _createRowInjector(context: MsTableRowContext<T>): Injector {
+  //   return {
+  //     get: (token: any, notFoundValue?: any): any => {
+  //       const customTokens = new WeakMap<any, any>([
+  //         [MsTableRowContext, context],
+  //         [MsTableRowDef, this.tableRowDef]]);
+  //
+  //       const value = customTokens.get(token);
+  //
+  //       if (typeof value !== 'undefined') {
+  //         return value;
+  //       }
+  //
+  //       return this.injector.get<any>(token, notFoundValue);
+  //     }
+  //   };
+  // }
 
   sort(compareFn?: (a: T, b: T) => number) {
     if (!compareFn) {
       return;
     }
-    this._items = this._data.sort(compareFn);
+    this._items = this._items.sort(compareFn);
     this.applyChanges();
   }
 
-  filter(value: (x: T) => boolean) {
-    if (!value) {
+  filter(filterFn: (x: T) => boolean = () => true) {
+    if (!filterFn) {
       return;
     }
-    this._items = this._data.filter(value);
-    this.applyChanges();
+    this._itemViews.forEach(viewRef => {
+      if (!filterFn(viewRef.context.$implicit)) {
+        viewRef.rootNodes[0].style.display = 'none';
+        viewRef.context.visible = false;
+      } else if (!viewRef.context.visible) {
+        viewRef.rootNodes[0].style.display = 'table-row';
+        // viewRef.rootNodes[0].animate([{opacity: 0}, {opacity: 1}], {fill: 'both', duration: 500});
+        viewRef.context.visible = true;
+        viewRef.context.coord.y = this.host.offsetHeight;
+
+      }
+      this.animateItem(viewRef);
+    });
   }
 
   reverse() {
     this._items.reverse();
-    this.applyChanges();
+    this.applyChanges().then();
   }
 
   remove(...items: T[]) {
-    this._data = this._data.filter(item => items.indexOf(item) < 0);
     this._items = this._items.filter(item => items.indexOf(item) < 0);
     this.applyChanges();
   }
 
   hideColumn(index: number) {
-    const width = this.tableHeadRows.toArray()[0].cellDefs.toArray()[index].element.offsetWidth;
-    this.tableHeadRows.toArray()[0].destroyCellAt(index);
-    this.rowContents.forEach(row => row.destroyCellAt(index));
+    this.tableHeadRows.toArray()[0].hideCell(index);
+    this.tableRows.forEach(row => row.hideCell(index));
   }
 
   showColumn(index: number) {
-    const headerCell = this.tableHeadRow.cellDefs.toArray()[index];
-    headerCell.create();
-    const width = headerCell.element.offsetWidth;
-    headerCell.destroy();
-    this.tableHeadRows.toArray()[0].createCellAt(index, width);
-    this.rowContents.forEach(row => row.createCellAt(index, width));
+    this.tableHeadRows.toArray()[0].showCell(index);
+    this.tableRows.forEach(row => row.showCell(index));
   }
 
   toggleColumn(index: number) {
-    const headerCell = this.tableHeadRow.cellDefs.toArray()[index];
+    const headerCell = this.tableHeadRow.headerCells.toArray()[index];
     if (headerCell.visible) {
       this.hideColumn(index);
     } else {
@@ -290,20 +316,52 @@ export class MsTable<T = any> implements AfterViewInit, OnInit, AfterContentInit
   }
 
   hideColumns(columnNames: string[]) {
+    columnNames.forEach(name => this.hideColumnByName(name));
   }
 
-  animateItem(item: MsTableRow<T>): Promise<void> {
+  hideColumnByName(columnName: string) {
+    const index = this.tableHeadRow.findColumnIndex(columnName);
+    if (index > -1) {
+      this.hideColumn(index);
+    }
+  }
+
+  showColumnByName(columnName: string) {
+    const index = this.tableHeadRow.findColumnIndex(columnName);
+    if (index > -1) {
+      this.showColumn(index);
+    }
+  }
+
+
+  toggleColumnByName(columnName: string) {
+    const index = this.tableHeadRow.findColumnIndex(columnName);
+    if (index > -1) {
+      this.toggleColumn(index);
+    }
+  }
+
+  animateItem(item: EmbeddedViewRef<MsTableRowContext<T>>): Promise<void> {
     return new Promise<void>(resolve => {
-      if (!item.coord) {
+      if (!item.context.coord) {
         resolve();
         return;
       }
-      const y = item.coord.y - item.host.getBoundingClientRect().y;
-      item.host.animate([
+      const y = item.context.coord.y - item.rootNodes[0].getBoundingClientRect().y;
+      item.rootNodes[0].animate([
         {'transform': `translateY( ${y}px)`},
-        {'transform': `translateY(0)`}
-      ], {fill: 'both', duration: 200, easing: 'ease-in-out'})
-        .onfinish = () => resolve();
+        {'transform': `none`}
+      ], {fill: 'both', duration: 400})
+        .onfinish = () => {
+        resolve();
+        item.context.coord = item.rootNodes[0].getBoundingClientRect();
+      };
+    });
+  }
+
+  resetSortColumn() {
+    this.tableHeadRow.headerCells.forEach(cell => {
+      cell.resetSortState();
     });
   }
 

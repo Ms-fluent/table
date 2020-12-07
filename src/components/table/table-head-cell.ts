@@ -1,4 +1,13 @@
-import {Component, ElementRef, HostListener, Inject, Input, ViewEncapsulation} from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  HostListener,
+  Inject,
+  Input,
+  ViewEncapsulation
+} from '@angular/core';
 import {MS_TABLE_TOKEN, MsTableContract} from './table.interface';
 
 
@@ -8,15 +17,15 @@ let _uniqueId = 0;
   selector: '[MsTableHeadCell], [ms-tableHeadCell]',
   exportAs: 'msTableHeadCell',
   encapsulation: ViewEncapsulation.None,
-  template: `
-      <ng-content></ng-content>`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  templateUrl: 'table-head-cell.html',
   host: {
     'class': 'ms-tableHeadCell',
     'role': 'columnheader',
-    // '[attr.id]': 'id',
-    // '[attr.name]': 'name',
-    // '[attr.aria-sort]': 'ariaSort',
-    // '[attr.aria-colindex]': 'colIndex'
+    '[attr.id]': 'id',
+    '[attr.name]': 'name',
+    '[attr.aria-sort]': 'ariaSort',
+    '[attr.aria-colindex]': 'colIndex'
   },
 })
 export class MsTableHeadCell<T> {
@@ -31,7 +40,7 @@ export class MsTableHeadCell<T> {
   public name: string = this.id;
 
   /** The sorted order of the column. */
-  private _ariaSort: 'none' | 'ascending' | 'descending';
+  private _ariaSort: 'none' | 'ascending' | 'descending' = 'none';
   get ariaSort(): 'none' | 'ascending' | 'descending' {
     return this._ariaSort;
   }
@@ -42,6 +51,8 @@ export class MsTableHeadCell<T> {
   }
 
   isSortedColumn: boolean = false;
+
+  visible: boolean = true;
 
   @Input()
   get sortBy(): [string, 'string' | 'number' | 'date'] {
@@ -63,19 +74,31 @@ export class MsTableHeadCell<T> {
   private _sortFn: (a: T, b: T) => number;
 
   @HostListener('click')
-  click() {
+  sort() {
     if (this.sortBy == null) {
       return;
     }
+
     if (this.isSortedColumn) {
       this.table.reverse();
+      this._ariaSort = this.ariaSort === 'ascending' ? 'descending' : 'ascending';
     } else {
+      this.table.resetSortColumn();
       this.isSortedColumn = true;
       this.table.sort(this._sortFn);
+      this._ariaSort = 'descending';
     }
+    this.changeDetector.markForCheck();
+  }
+
+  resetSortState() {
+    this.isSortedColumn = false;
+    this._ariaSort = 'none';
+    this.changeDetector.markForCheck();
   }
 
   constructor(@Inject(MS_TABLE_TOKEN) private table: MsTableContract<T>,
+              private changeDetector: ChangeDetectorRef,
               private _elementRef: ElementRef<HTMLElement>) {
   }
 

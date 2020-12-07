@@ -1,0 +1,9 @@
+<div class="ms-tableHeadCell-layout">
+  <div class="ms-tableHeadCell-label">
+    <ng-content></ng-content>
+  </div>
+  <div class="ms-tableHeadCell-sortIcon" *ngIf="sortBy">
+    <i *ngIf="ariaSort == 'ascending'" class="ms-Icon ms-Icon--SortUp ms-motion-slideUpIn"></i>
+    <i *ngIf="ariaSort == 'descending'" class="ms-Icon ms-Icon--SortDown ms-motion-slideDownIn"></i>
+  </div>
+</div>

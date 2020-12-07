@@ -7,7 +7,8 @@ export class MsTableRowDef<T> {
   @Input('ms-tableRowDefOf')
   data: Array<T>;
 
-  constructor(public template: TemplateRef<MsTableRowContext<T>>) {}
+  constructor(public template: TemplateRef<MsTableRowContext<T>>) {
+  }
 
 }
 
@@ -16,6 +17,9 @@ export class MsTableRowContext<T> {
   even: boolean;
   first: boolean;
   last: boolean;
+
+  coord: DOMRect;
+  visible: boolean = true;
 
   constructor(public $implicit: T,
               public index: number, total: number) {
