@@ -6,15 +6,18 @@ import { AppComponent } from './app.component';
 import {MsTableModule} from '../components/table';
 import {HomeComponent} from './home/home.component';
 import {GitHubComponent} from './gitHub/gitHub.component';
+import {PaginatorComponent} from './paginator/paginator.component';
+import {MsPaginatorModule} from '../components/paginator';
 
 @NgModule({
   declarations: [
-    AppComponent, HomeComponent, GitHubComponent
+    AppComponent, HomeComponent, GitHubComponent, PaginatorComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
-    MsTableModule
+    MsTableModule,
+    MsPaginatorModule
   ],
   providers: [],
   bootstrap: [AppComponent]

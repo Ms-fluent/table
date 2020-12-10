@@ -1,6 +1,4 @@
 import {
-  AfterContentInit,
-  AfterViewChecked,
   AfterViewInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -17,7 +15,6 @@ import {
   IterableChangeRecord,
   IterableDiffer,
   IterableDiffers,
-  OnInit,
   Output,
   QueryList,
   ViewChild,
@@ -51,7 +48,7 @@ let _uniqueId = 0;
     '[attr.aria-colcount]': 'ariaColCount'
   },
 })
-export class MsTable<T = any> implements AfterViewInit, OnInit, AfterContentInit, AfterViewChecked {
+export class MsTable<T = any> implements AfterViewInit {
   public _uniqueId = `ms-table-${_uniqueId++}`;
 
   /** The unique ID for the table head cell. */
@@ -91,13 +88,28 @@ export class MsTable<T = any> implements AfterViewInit, OnInit, AfterContentInit
   }
 
   set hiddenColumns(names: string[]) {
-    if (this.tableRows) {
-      this.hideColumns(names);
+    if (this.tableHeadRow && this.tableRows) {
+      this.setHiddenColumns(names);
     }
     this._hiddenColumns = names;
   }
 
-  _hiddenColumns: string[] = [];
+  _hiddenColumns: string[];
+
+
+  @Input()
+  get visibleColumns(): string[] {
+    return this._visibleColumns;
+  }
+
+  set visibleColumns(names: string[]) {
+    if (this.tableHeadRow && this.tableRows) {
+      this.setVisibleColumns(names);
+    }
+    this._visibleColumns = names;
+  }
+
+  _visibleColumns: string[];
 
   @Input()
   get sortFn(): (a: T, b: T) => number {
@@ -124,7 +136,7 @@ export class MsTable<T = any> implements AfterViewInit, OnInit, AfterContentInit
   tableRows: QueryList<MsTableRow>;
 
   get tableHeadRow(): MsTableHead<T> {
-    return this.tableHeadRows.length === 0 ? null : this.tableHeadRows.toArray()[0];
+    return !this.tableHeadRows || this.tableHeadRows.length === 0 ? null : this.tableHeadRows.toArray()[0];
   }
 
   @ContentChild(forwardRef(() => MsTableRowDef))
@@ -153,17 +165,6 @@ export class MsTable<T = any> implements AfterViewInit, OnInit, AfterContentInit
               private _changeDetectorRef: ChangeDetectorRef) {
   }
 
-  ngOnInit(): void {
-
-  }
-
-  ngAfterContentInit(): void {
-  }
-
-  ngAfterViewChecked(): void {
-
-  }
-
   ngAfterViewInit(): void {
 
     this.tableBodyContainer.clear();
@@ -177,7 +178,17 @@ export class MsTable<T = any> implements AfterViewInit, OnInit, AfterContentInit
     this.applyChanges();
 
     this.tableRows.changes.pipe(first()).subscribe(() => {
-      this.hideColumns(this.hiddenColumns);
+      if (this._hiddenColumns) {
+        this.hiddenColumns = this._hiddenColumns;
+      } else if (this._visibleColumns) {
+        this.visibleColumns = this._visibleColumns;
+      }
+    });
+
+    this.tableRowDef.ondatachange.subscribe(() => {
+      console.log('Data reference changed!');
+      this.clear();
+      this.push(...this.tableRowDef.data);
     });
     this.init.emit();
   }
@@ -192,18 +203,18 @@ export class MsTable<T = any> implements AfterViewInit, OnInit, AfterContentInit
     changes.forEachMovedItem(this.forEachMovedItem);
 
     changes.forEachItem(record => {
-     const ref = this._itemViews.get(record.trackById);
-     ref.context.setData(record.currentIndex, this._itemViews.size);
-     this.animateItem(ref);
+      const ref = this._itemViews.get(record.trackById);
+      ref.context.setData(record.currentIndex, this._itemViews.size);
+      this.animateItem(ref);
     });
   }
 
-  forEachAddedItem = (record: IterableChangeRecord<any>) => {
+  private forEachAddedItem = (record: IterableChangeRecord<any>) => {
     const ref = this._createRowView(record.currentIndex);
     this._itemViews.set(record.trackById, ref);
   };
 
-  forEachRemovedItem = (record: IterableChangeRecord<any>) => {
+  private forEachRemovedItem = (record: IterableChangeRecord<any>) => {
     const ref = this._itemViews.get(record.trackById);
     if (ref != null) {
       this.tableBodyContainer.remove(this.tableBodyContainer.indexOf(ref));
@@ -211,7 +222,7 @@ export class MsTable<T = any> implements AfterViewInit, OnInit, AfterContentInit
     }
   };
 
-  forEachMovedItem = (record: IterableChangeRecord<any>) => {
+  private forEachMovedItem = (record: IterableChangeRecord<any>) => {
     const ref = this._itemViews.get(record.trackById);
     if (ref != null) {
       this.tableBodyContainer.move(ref, record.currentIndex);
@@ -219,7 +230,7 @@ export class MsTable<T = any> implements AfterViewInit, OnInit, AfterContentInit
     }
   };
 
-  _createRowView(i: number): EmbeddedViewRef<MsTableRowContext<T>> {
+  private _createRowView(i: number): EmbeddedViewRef<MsTableRowContext<T>> {
     const context = new MsTableRowContext(this._items[i], i, this._items.length);
     const viewRef = this.tableBodyContainer.createEmbeddedView(this.tableRowDef.template, context, i);
     viewRef.detectChanges();
@@ -282,18 +293,53 @@ export class MsTable<T = any> implements AfterViewInit, OnInit, AfterContentInit
         viewRef.context.coord.y = this.host.offsetHeight;
 
       }
-      this.animateItem(viewRef);
+      this.animateItem(viewRef).then();
     });
   }
 
-  reverse() {
+  public reverse() {
     this._items.reverse();
     this.applyChanges().then();
   }
 
   remove(...items: T[]) {
     this._items = this._items.filter(item => items.indexOf(item) < 0);
-    this.applyChanges();
+    this.applyChanges().then();
+  }
+
+
+  get length(): number {
+    return this.items.length;
+  };
+
+  pop() {
+    this._items.pop();
+    this.applyChanges().then();
+  }
+
+  shift() {
+    this._items.shift();
+    this.applyChanges().then();
+  }
+
+  push(...items: T[]) {
+    this._items.push(...items);
+    this.applyChanges().then();
+  }
+
+  unshift(...items: T[]) {
+    this._items.unshift(...items);
+    this.applyChanges().then();
+  }
+
+  unshiftRange(items: T[]) {
+    this._items.unshift(...items);
+    this.applyChanges().then();
+  }
+
+  clear() {
+    this._items = [];
+    this.applyChanges().then();
   }
 
   hideColumn(index: number) {
@@ -319,6 +365,26 @@ export class MsTable<T = any> implements AfterViewInit, OnInit, AfterContentInit
     columnNames.forEach(name => this.hideColumnByName(name));
   }
 
+  setHiddenColumns(hiddenColumns: string[]) {
+    this.tableHeadRow.headerCells.forEach(column => {
+      if (column.name && column.visible && hiddenColumns.indexOf(column.name) >= 0) {
+        this.hideColumnByName(column.name);
+      } else if (!column.visible) {
+        this.showColumnByName(column.name);
+      }
+    });
+  }
+
+  setVisibleColumns(visibleColumns: string[]) {
+    this.tableHeadRow.headerCells.forEach(column => {
+      if (column.name && visibleColumns.indexOf(column.name) >= 0) {
+        this.showColumnByName(column.name);
+      } else {
+        this.hideColumnByName(column.name);
+      }
+    });
+  }
+
   hideColumnByName(columnName: string) {
     const index = this.tableHeadRow.findColumnIndex(columnName);
     if (index > -1) {
@@ -341,7 +407,7 @@ export class MsTable<T = any> implements AfterViewInit, OnInit, AfterContentInit
     }
   }
 
-  animateItem(item: EmbeddedViewRef<MsTableRowContext<T>>): Promise<void> {
+  private animateItem(item: EmbeddedViewRef<MsTableRowContext<T>>): Promise<void> {
     return new Promise<void>(resolve => {
       if (!item.context.coord) {
         resolve();

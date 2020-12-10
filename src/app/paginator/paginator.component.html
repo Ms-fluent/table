@@ -1,0 +1,38 @@
+<div>Total size: {{paginator.totalSize}}</div>
+
+<div>Page size: {{paginator.pageSize}}</div>
+
+<div>Page count: {{paginator.countPage()}}</div>
+
+<div>Pages: {{paginator.pages | json}}</div>
+
+<div *ngFor="let page of paginator.pages">
+  page {{page}}: {{paginator.getPage(page).size}}
+</div>
+
+
+<div style="padding-top: 100px; border: 1px solid red">
+  <button [class.ms-bgColor-red]="msPaginator.pageSize === 3" (click)="msPaginator.pageSize = 3">3</button>
+  <button [class.ms-bgColor-red]="msPaginator.pageSize === 5" (click)="msPaginator.pageSize = 5">5</button>
+  <button [class.ms-bgColor-red]="msPaginator.pageSize === 10" (click)="msPaginator.pageSize = 10">10</button>
+  {{msPaginator.pageSize}}
+  <div *ngIf="msPaginator.currentPage">
+    [{{msPaginator.currentPage.start}} - {{msPaginator.currentPage.end}}(){{msPaginator.currentPage.length}}]
+  </div>
+
+  <ms-paginator pageSize="5" totalSize="34" #msPaginator [itemsFn]="itemsFn">
+    <div *msPaginatorPageDef="let item=items">
+      {{item[0]. | json}}
+    </div>
+  </ms-paginator>
+
+  <div>
+    <button [disabled]="!msPaginator.hasPreviousPage" (click)="msPaginator.previousPage()"><</button>
+    <button *ngFor="let page of msPaginator.pages" [class.ms-bgColor-blue]="msPaginator.currentPageIndex === page"
+      (click)="msPaginator.currentPageIndex = page" >
+      {{page}}
+    </button>
+    <button [disabled]="!msPaginator.hasNextPage" (click)="msPaginator.nextPage()">></button>
+  </div>
+  <div></div>
+</div>

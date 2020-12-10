@@ -11,7 +11,7 @@ export class MsTableHeadDef {
 
 
 @Component({
-  selector: '[msTableHead],  [ms-tableHead], msTableHead, ms-tableHead',
+  selector: '[msTableHead], [ms-tableHead], msTableHead, ms-tableHead',
   exportAs: 'msTableHead',
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,

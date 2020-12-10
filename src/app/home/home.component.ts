@@ -10,7 +10,9 @@ export class HomeComponent {
 
   letters = 'abcdefghijklmnoprstuvwxyz'.toUpperCase().split('');
 
-  elements = ELEMENT_DATA;
+  elements = ELEMENT_DATA.slice(0, 10);
+
+  columns: string[] = ['#'];
 
   @ViewChild('table')
   msGrid: MsTable<PeriodicElement>;
@@ -26,5 +28,25 @@ export class HomeComponent {
 
   filterByLetter(letter: string) {
     this.msGrid.filter(x => x.name.toUpperCase().indexOf(letter) > -1);
+  }
+
+  loadAll() {
+    console.log('load all data');
+    this.elements = ELEMENT_DATA.slice();
+  }
+
+  toggleColumnByName(value: string) {
+    if (this.columns.indexOf(value) >= 0) {
+      this.columns = this.columns.filter(c => c !== value);
+    } else {
+      this.columns.push(value);
+      this.columns = this.columns.slice();
+    }
+
+    console.log(this.columns);
+  }
+
+  selectedColumn(value: string) {
+    return this.columns.indexOf(value) >= 0;
   }
 }

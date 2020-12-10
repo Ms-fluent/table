@@ -1,7 +1,7 @@
 import {ChangeDetectionStrategy, Component, ElementRef, ViewEncapsulation} from '@angular/core';
 
 @Component({
-  selector: '[ms-tableCell], [MsTableCell]',
+  selector: '[ms-tableCell], [msTableCell], ms-tableCell, msTableCell',
   exportAs: 'msTableCell',
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,

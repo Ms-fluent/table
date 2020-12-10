@@ -1,14 +1,12 @@
-<button (click)="table.toggleColumn(0)">Toggle 0</button>
-<button (click)="table.toggleColumn(1)">Toggle 1</button>
-<button (click)="table.toggleColumn(2)">Toggle 2</button>
-<button (click)="table.toggleColumn(3)">Toggle 3</button>
-<button (click)="table.toggleColumn(4)">Toggle 4</button>
-<button (click)="table.toggleColumn(5)">Toggle 5</button>
-<button (click)="table.toggleColumn(6)">Toggle 6</button>
+<button (click)=" toggleColumnByName('#')" [class.ms-bgColor-blue]="selectedColumn('#')">#</button>
+<button (click)=" toggleColumnByName('id')" [class.ms-bgColor-blue]="selectedColumn('id')">Id</button>
+<button [class.ms-bgColor-blue]="selectedColumn('position')" (click)=" toggleColumnByName('position')"> Position</button>
+ <button [class.ms-bgColor-blue]="selectedColumn('name')" (click)=" toggleColumnByName('name')">Name</button>
+<button [class.ms-bgColor-blue]="selectedColumn('weight')" (click)=" toggleColumnByName('weight')">Weight</button>
+<button (click)=" toggleColumnByName('symbol')" [class.ms-bgColor-blue]="selectedColumn('symbol')">Symbol</button>
+<button (click)=" toggleColumnByName('type')" [class.ms-bgColor-blue]="selectedColumn('type')">Type</button>
+<button (click)=" toggleColumnByName('actions')" [class.ms-bgColor-blue]="selectedColumn('actions')">Actions</button>
 
-<button (click)="table.toggleColumnByName('id')">Toggle ID</button>
-<button (click)="table.toggleColumnByName('position')">Toggle Position</button>
-<button (click)="table.toggleColumnByName('type')">Toggle type</button>
 
 <div>
   <button (click)="filter('Reactive nonmetal')">Reactive nonmetal</button>
@@ -23,22 +21,26 @@
 </div>
 
 <div>
-  <button *ngFor="let l of letters" (click)="filterByLetter(l)">{{l}}</button>
+  <button (click)="filterByLetter(l)" *ngFor="let l of letters">{{l}}</button>
 </div>
 
-<MsTable #table  style="height: 500px" [hiddenColumns]="['type', 'position']">
+<div>
+  <button (click)="loadAll()">Load all</button>
+</div>
+
+<MsTable #table [visibleColumns]="columns" style="height: 500px">
   <tr *ms-tableHeadDef ms-tableHead>
     <th ms-tableHeadCell name="#">#</th>
-    <th ms-tableHeadCell name="id" [sortBy]="['id', 'number']">Id</th>
-    <th ms-tableHeadCell name="position" [sortBy]="['position', 'number']">Position</th>
-    <th ms-tableHeadCell [sortBy]="['name', 'string']">Name</th>
-    <th ms-tableHeadCell [sortBy]="['weight', 'number']">Weight</th>
-    <th ms-tableHeadCell [sortBy]="['symbol', 'string']">Symbol</th>
-    <th ms-tableHeadCell name="type" [sortBy]="['type', 'string']">Type</th>
-    <th ms-tableHeadCell >Action</th>
+    <th [sortBy]="['id', 'number']" ms-tableHeadCell name="id">Id</th>
+    <th [sortBy]="['position', 'number']" ms-tableHeadCell name="position">Position</th>
+    <th [sortBy]="['name', 'string']" ms-tableHeadCell name="name">Name</th>
+    <th [sortBy]="['weight', 'number']" ms-tableHeadCell name="weight">Weight</th>
+    <th [sortBy]="['symbol', 'string']" ms-tableHeadCell name="symbol">Symbol</th>
+    <th [sortBy]="['type', 'string']" ms-tableHeadCell name="type">Type</th>
+    <th ms-tableHeadCell name="actions">Action</th>
   </tr>
 
-  <tr ms-tableRow *ms-tableRowDef="let item of elements; let i=index" #row>
+  <tr #row *ms-tableRowDef="let item of elements; let i=index" ms-tableRow>
     <td ms-tableCell>{{i}} </td>
     <td ms-tableCell>{{item.id}}</td>
     <td ms-tableCell>{{item.position}}</td>
@@ -47,7 +49,7 @@
     <td ms-tableCell>{{item.symbol}}</td>
     <td ms-tableCell>{{item.type}}</td>
     <td ms-tableCell>
-      <span style="color: blue; cursor: pointer" (click)="table.remove(item)">Delete</span>
+      <span (click)="table.remove(item)" style="color: blue; cursor: pointer">Delete</span>
     </td>
   </tr>
 </MsTable>

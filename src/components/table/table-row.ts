@@ -6,7 +6,7 @@ let _rowUniqueId = 0;
 
 
 @Component({
-  selector: '[ms-tableRow], [MsTableRow], ms-tableRow',
+  selector: '[ms-tableRow], [msTableRow], ms-tableRow, msTableRow',
   exportAs: 'msTableRow',
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,

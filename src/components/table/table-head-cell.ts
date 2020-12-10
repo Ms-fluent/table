@@ -14,7 +14,7 @@ import {MS_TABLE_TOKEN, MsTableContract} from './table.interface';
 let _uniqueId = 0;
 
 @Component({
-  selector: '[MsTableHeadCell], [ms-tableHeadCell]',
+  selector: '[msTableHeadCell], [ms-tableHeadCell], ms-tableHeadCell, msTableHeadCell',
   exportAs: 'msTableHeadCell',
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,

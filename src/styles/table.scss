@@ -76,7 +76,7 @@ $ms-tableRow-animationDuration: $ms-motion-duration-3;
   top: 0;
 
   & .ms-tableHeadCell-label {
-
+    flex-grow: 2;
   }
   & .ms-tableHeadCell-layout {
     display: flex;
